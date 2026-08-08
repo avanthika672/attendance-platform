@@ -3,7 +3,7 @@ package com.zepic.attendance_platform.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -28,7 +28,7 @@ public class AppUser {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "college_id", nullable = false)
-    private com.zepic.attendance_platform.entity.College college;
+    private College college;
 
     @Column(name = "email", nullable = false)
     private String email;
@@ -43,20 +43,20 @@ public class AppUser {
     private String role;
 
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<com.zepic.attendance_platform.entity.LoginSession> loginSessions;
+    private List<LoginSession> loginSessions;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-    private com.zepic.attendance_platform.entity.Student student;
+    private Student student;
 
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
-    private List<com.zepic.attendance_platform.entity.Course> courses;
+    private List<Course> courses;
 
     @OneToMany(mappedBy = "markedBy", fetch = FetchType.LAZY)
-    private List<com.zepic.attendance_platform.entity.AttendanceRecord> attendanceRecords;
+    private List<AttendanceRecord> attendanceRecords;
 }

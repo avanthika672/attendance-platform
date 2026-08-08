@@ -3,7 +3,7 @@ package com.zepic.attendance_platform.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -26,15 +26,15 @@ public class Student {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "college_id", nullable = false)
-    private com.zepic.attendance_platform.entity.College college;
+    private College college;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private com.zepic.attendance_platform.entity.AppUser user;
+    private AppUser user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
-    private com.zepic.attendance_platform.entity.Department department;
+    private Department department;
 
     @Column(name = "roll_number", nullable = false)
     private String rollNumber;
@@ -49,14 +49,14 @@ public class Student {
     private String status;
 
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 
     @OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
-    private List<com.zepic.attendance_platform.entity.CourseEnrollment> courseEnrollments;
+    private List<CourseEnrollment> courseEnrollments;
 
     @OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
-    private List<com.zepic.attendance_platform.entity.AttendanceRecord> attendanceRecords;
+    private List<AttendanceRecord> attendanceRecords;
 }
