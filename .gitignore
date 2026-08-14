@@ -36,3 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 .DS_Store
+**/.DS_Store
+attendance_platform_backup.sql
+attendance_platform_current.sql
+.env
+jq-training/
+run-local.sh

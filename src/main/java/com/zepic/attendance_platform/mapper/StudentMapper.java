@@ -13,6 +13,7 @@ public interface StudentMapper {
 
     DepartmentSummaryResponse toDepartmentSummary(Department department);
 
+    @Mapping(source = "user.email", target = "email")
     StudentResponse toResponse(Student entity);
 
     @Mapping(target = "id", ignore = true)
