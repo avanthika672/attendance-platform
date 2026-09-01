@@ -8,6 +8,9 @@ import com.zepic.attendance_platform.exception.DepartmentNotFoundException;
 import com.zepic.attendance_platform.mapper.DepartmentMapper;
 import com.zepic.attendance_platform.repository.CollegeRepository;
 import com.zepic.attendance_platform.repository.DepartmentRepository;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
@@ -53,6 +56,7 @@ public class DepartmentService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value="departments", key = "#collegeId+ ':' +#id")
     public DepartmentSummaryResponse getDepartmentById(
             Long collegeId,
             Long id)
@@ -65,6 +69,7 @@ public class DepartmentService {
     }
 
     @Transactional
+    @CachePut(value="departments", key ="#collegeId+ ':' +#id")
     public DepartmentSummaryResponse updateDepartment(
             Long collegeId,
             Long id,
@@ -81,6 +86,7 @@ public class DepartmentService {
     }
 
     @Transactional
+    @CacheEvict(value="departments",key="#collegeId+ ':' +#id")
     public void deleteDepartment(
             Long collegeId,
             Long id)
