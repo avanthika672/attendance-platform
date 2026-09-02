@@ -12,7 +12,7 @@ public class WeatherService{
 
     public WeatherService(
             WeatherClient weatherClient,
-            @Value("$(openweather.api.key") String apiKey
+            @Value("${openweather.api.key}") String apiKey
     ){
         this.weatherClient=weatherClient;
         this.apiKey=apiKey;
