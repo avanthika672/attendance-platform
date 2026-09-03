@@ -2,6 +2,7 @@ package com.zepic.attendance_platform.controller;
 
 import com.zepic.attendance_platform.dto.weather.WeatherResponse;
 import com.zepic.attendance_platform.service.WeatherService;
+import com.zepic.attendance_platform.util.CityNormalizer;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +17,8 @@ public class WeatherController {
     public WeatherResponse getWeather(
             @RequestParam String city
     ){
-        return weatherService.getWeather(city);
+        String normalizedCity = CityNormalizer.normalize(city);
+        return weatherService.getWeather(normalizedCity);
     }
 }
 
