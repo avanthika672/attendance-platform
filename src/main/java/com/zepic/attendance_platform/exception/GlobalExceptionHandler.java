@@ -1,4 +1,6 @@
 package com.zepic.attendance_platform.exception;
+import feign.FeignException;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,7 +20,51 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(body);
     }
-}
+    @ExceptionHandler(FeignException.NotFound.class)
+    public ResponseEntity<Map<String,Object>> handleCityNotFound(
+            FeignException.NotFound exception){
+        Map<String,Object> body= Map.of(
+                "timestamp",Instant.now().toString(),
+                "code","CITY_NOT_FOUND",
+                "message", "City not found"
+        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(body);
+    }
+    @ExceptionHandler(FeignException.Unauthorized.class)
+    public ResponseEntity<Map<String,Object>> handleWeatherAuthenticationError(
+            FeignException.Unauthorized exception){
+        Map<String, Object> body = Map.of(
+                "timestamp", Instant.now().toString(),
+                "code", "WEATHER_SERVICE_AUTH_ERROR",
+                "message", "Weather service authentication failed"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(body);
+    }
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<Map<String,Object>> handleWeatherServiceError(
+            FeignException exception){
+        Map<String,Object> body = Map.of(
+                "timestamp", Instant.now().toString(),
+                "code","WEATHER_SERVICE_ERROR",
+                "message","Weather service is unavailable"
+        );
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(body);
+    }
+
+
+
+
+
+    }
+
+
 
 
 
