@@ -2,6 +2,7 @@ package com.zepic.attendance_platform;
 
 
 import com.zepic.attendance_platform.dto.request.CreateDepartmentRequest;
+import com.zepic.attendance_platform.dto.request.UpdateDepartmentRequest;
 import com.zepic.attendance_platform.dto.response.DepartmentSummaryResponse;
 import com.zepic.attendance_platform.entity.College;
 import com.zepic.attendance_platform.entity.Department;
@@ -21,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DepartmentServiceTest {
@@ -112,6 +113,92 @@ class DepartmentServiceTest {
                 () -> departmentService.getDepartmentById(
                         collegeId, departmentId)
         );
+    }
+    @Test
+    void getAllDepartments_shouldReturnDepartmentsForCollege() {
+        Long collegeId = 1L;
+        College college = createCollege(collegeId);
+
+        Department d1 = createDepartment(10L, college);
+        Department d2 = createDepartment(11L, college);
+
+        DepartmentSummaryResponse r1 = createResponse(10L, "Computer Science");
+        DepartmentSummaryResponse r2 = createResponse(11L, "IT");
+
+        when(departmentRepository.findAllByCollege_IdOrderByIdAsc(collegeId)).thenReturn(java.util.List.of(d1, d2));
+        when(departmentMapper.toSummaryResponse(d1)).thenReturn(r1);
+        when(departmentMapper.toSummaryResponse(d2)).thenReturn(r2);
+
+        assertEquals(
+                java.util.List.of(r1, r2),
+                departmentService.getAllDepartments(collegeId)
+        );
+    }
+    @Test
+    void updateDepartment_shouldUpdateSuccessfully()
+            throws DepartmentNotFoundException {
+
+        Long collegeId = 1L;
+        Long departmentId = 10L;
+        College college = createCollege(collegeId);
+        Department department = createDepartment(departmentId, college);
+
+        UpdateDepartmentRequest request = new UpdateDepartmentRequest("Information Technology");
+        DepartmentSummaryResponse expected = createResponse(departmentId, "Information Technology");
+
+        when(departmentRepository.findByIdAndCollege_Id(departmentId, collegeId))
+                .thenReturn(Optional.of(department));
+        when(departmentRepository.save(department)).thenReturn(department);
+        when(departmentMapper.toSummaryResponse(department)).thenReturn(expected);
+
+        assertEquals(expected, departmentService.updateDepartment(collegeId, departmentId, request));
+
+        assertEquals("Information Technology", department.getName());
+    }
+    @Test
+    void updateDepartment_shouldThrowExceptionWhenNotFound() {
+
+        Long collegeId = 1L;
+        Long departmentId = 999L;
+
+        when(departmentRepository.findByIdAndCollege_Id(departmentId, collegeId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(DepartmentNotFoundException.class,
+                () -> departmentService.updateDepartment(collegeId, departmentId,
+                        new UpdateDepartmentRequest("IT"))
+        );
+    }
+    @Test
+    void deleteDepartment_shouldDeleteSuccessfully()
+            throws DepartmentNotFoundException {
+
+        Long collegeId = 1L;
+        Long departmentId = 10L;
+        Department department =
+                createDepartment(departmentId, createCollege(collegeId));
+
+        when(departmentRepository.findByIdAndCollege_Id(departmentId, collegeId))
+                .thenReturn(Optional.of(department));
+
+        departmentService.deleteDepartment(collegeId, departmentId);
+
+        verify(departmentRepository).delete(department);
+    }
+    @Test
+    void deleteDepartment_shouldThrowExceptionWhenNotFound() {
+
+        Long collegeId = 1L;
+        Long departmentId = 999L;
+
+        when(departmentRepository.findByIdAndCollege_Id(departmentId, collegeId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(DepartmentNotFoundException.class,
+                () -> departmentService.deleteDepartment(collegeId, departmentId)
+        );
+
+        verify(departmentRepository, never()).delete(any(Department.class));
     }
 
     private College createCollege(Long id) {
