@@ -23,6 +23,8 @@ ext{
 dependencyManagement {
 	imports{
 		mavenBom("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+		mavenBom("org.eclipse.jetty:jetty-bom:12.0.30")
+		mavenBom("org.eclipse.jetty.ee10:jetty-ee10-bom:12.0.30")
 	}
 }
 dependencies {
@@ -48,6 +50,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.wiremock:wiremock-jetty12:3.13.2'
+	testImplementation 'io.github.openfeign:feign-jackson'
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testAnnotationProcessor 'org.projectlombok:lombok'
