@@ -1,6 +1,14 @@
 package com.zepic.attendance_platform.repository;
 
 
+import com.zepic.attendance_platform.dto.request.CreateDepartmentRequest;
+import com.zepic.attendance_platform.dto.response.DepartmentSummaryResponse;
+import com.zepic.attendance_platform.entity.College;
+import com.zepic.attendance_platform.exception.DepartmentNotFoundException;
+import com.zepic.attendance_platform.mapper.CollegeMapperImpl;
+import com.zepic.attendance_platform.mapper.DepartmentMapperImpl;
+import com.zepic.attendance_platform.service.CollegeService;
+import com.zepic.attendance_platform.service.DepartmentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -11,27 +19,31 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+
+import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import({DepartmentService.class, DepartmentMapperImpl.class})
 class DepartmentRepositoryIntegrationTest {
     @Container
     static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
     @Autowired
-    DepartmentRepository departmentRepository;
+    CollegeRepository collegeRepository;
     @Autowired
-    JdbcTemplate jdbc;
+    DepartmentService departmentService;
+
     @TestConfiguration
     static class TestCacheConfig {
 
@@ -49,27 +61,61 @@ class DepartmentRepositoryIntegrationTest {
     }
 
     @Test
-    void findByIdAndCollegeId_shouldRespectTenant(){
-        jdbc.update("INSERT INTO college (name) VALUES (?)", "College A");
-        jdbc.update("INSERT INTO college (name) VALUES (?)", "College B");
-        jdbc.update("""
-                 INSERT INTO department (college_id, name) 
-                 VALUES (1, 'CSE'), (2, 'ECE') 
-                 """);
+    void getDepartmentById_shouldRespectTenant() throws DepartmentNotFoundException{
+        College collegeA = collegeRepository.save(
+                College.builder()
+                        .name("College A")
+                        .createdAt(Instant.now())
+                        .updatedAt(Instant.now())
+                        .build()
+        );
+        College collegeB = collegeRepository.save(
+                College.builder()
+                        .name("College B")
+                        .createdAt(Instant.now())
+                        .updatedAt(Instant.now())
+                        .build()
+        );
+        DepartmentSummaryResponse created = departmentService.createDepartment(
+                collegeA.getId(),
+                new CreateDepartmentRequest("CSE")
+        );
+        assertEquals("CSE", created.name());
 
-        assertTrue(departmentRepository.findByIdAndCollege_Id(1L,1L).isPresent());
-        assertTrue(departmentRepository.findByIdAndCollege_Id(1L,2L).isEmpty());
+        DepartmentSummaryResponse fetched = departmentService.getDepartmentById(
+                collegeA.getId(),
+                created.id()
+        );
 
+        assertEquals("CSE", fetched.name());
+
+        assertThrows(DepartmentNotFoundException.class, () -> departmentService.getDepartmentById(
+                collegeB.getId(),
+                created.id()
+                )
+        );
     }
-    @Test
-    void findAllByCollegeId_shouldReturnOrderedDepartments(){
-        jdbc.update("INSERT INTO college (name) VALUES (?)", "College C");
-        jdbc.update("""
-                INSERT INTO department (college_id, name) VALUES (3, 'ECE'), (3, 'CSE')
-                """);
 
-        List<?> departments = departmentRepository.findAllByCollege_IdOrderByIdAsc(3L);
+    @Test
+    void getAllDepartments_shouldReturnOrderedDepartments(){
+        College college = collegeRepository.save(
+                College.builder()
+                        .name("College C")
+                        .createdAt(Instant.now())
+                        .updatedAt(Instant.now())
+                        .build()
+        );
+        departmentService.createDepartment(college.getId(), new CreateDepartmentRequest("ECE")
+        );
+        departmentService.createDepartment(college.getId(), new CreateDepartmentRequest("CSE")
+        );
+
+
+        List<DepartmentSummaryResponse> departments = departmentService.getAllDepartments(college.getId());
+
         assertEquals(2,departments.size());
+        assertEquals("ECE", departments.get(0).name());
+        assertEquals("CSE",departments.get(1).name());
 
     }
 }
