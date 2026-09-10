@@ -8,6 +8,9 @@ import com.zepic.attendance_platform.exception.DepartmentNotFoundException;
 import com.zepic.attendance_platform.mapper.DepartmentMapper;
 import com.zepic.attendance_platform.repository.CollegeRepository;
 import com.zepic.attendance_platform.repository.DepartmentRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,22 +19,29 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 @Service
+@Slf4j
 public class DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final CollegeRepository collegeRepository;
     private final DepartmentMapper departmentMapper;
+    private final Counter departmentCreatedCounter;
     public DepartmentService(
             DepartmentRepository departmentRepository,
             CollegeRepository collegeRepository,
-            DepartmentMapper departmentMapper) {
+            DepartmentMapper departmentMapper,
+            MeterRegistry meterRegistry) {
         this.departmentRepository = departmentRepository;
         this.collegeRepository = collegeRepository;
         this.departmentMapper = departmentMapper;
+        this.departmentCreatedCounter = Counter.builder("department.created")
+                .description("Number of departments created")
+                .register(meterRegistry);
     }
     @Transactional
     public DepartmentSummaryResponse createDepartment(
             Long collegeId,
             CreateDepartmentRequest request) {
+        log.info("Creating department '{}' for college {}",request.name(),collegeId);
         College college = collegeRepository.findById(collegeId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("College not found"));
@@ -42,6 +52,7 @@ public class DepartmentService {
                 .updatedAt(Instant.now())
                 .build();
         department = departmentRepository.save(department);
+        departmentCreatedCounter.increment();
         return departmentMapper.toSummaryResponse(department);
     }
 

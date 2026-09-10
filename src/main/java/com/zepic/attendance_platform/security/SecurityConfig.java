@@ -17,7 +17,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/error", "/weather").permitAll()
+                        .requestMatchers("/api/auth/**", "/error", "/weather","/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
